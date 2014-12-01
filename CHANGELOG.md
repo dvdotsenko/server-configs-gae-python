@@ -1,5 +1,8 @@
 ### HEAD
 
+### v27.1.1 (2014-11-30) - Automate app config files generation and turned project into "static first" plus "Python-based API" in "subfolder"
+[Release Link](https://github.com/dvdotsenko/server-configs-gae-python/releases/tag/27.1.1)
+
 ### v27.1.0 (2014-11-29) - Upgraded GAE python boilerplate app to Python 2.7 runtime
 [Release Link](https://github.com/dvdotsenko/server-configs-gae-python/releases/tag/27.1.0)
 
