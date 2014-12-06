@@ -10,8 +10,7 @@
 
 # The extensions are inserted into a url regex pattern that will look like this:
 # (?:^/   insures that nothing is captured if some part fails and consumes leading slash
-#   (?!api/)   insures that path does not start with one of dynamic folders
-#   (?!admin/)   --- || --- (we allow multiple top-level dynamic folder to be excluded
+#   (static|another_static)/   list of all folders under root folder that are not dynamic prefixes
 #   (.+\.(html|htm))   the extension(s)
 # )
 
@@ -19,44 +18,76 @@
 
 handlers:
 
-- url: (?:^/(?!api/)(?!_ah/warmup)(.+\.(m4a|f4a|f4b|oga|ogg|flv|mp4|m4v|f4v|f4p|ogv|webm|mid|midi|mp3|wav|bmp|gif|jpeg|jpg|png|webp|svg|svgz|eot|otf|ttf|ttc|woff|crx|htc|oex|safariextz|swf|torrent|vcf|vtt|xpi|docx?|exe|pptx?|rtf|xlsx?|odp|ods|odt|bz2|gz|rar|tar|tgz|zip|txt|csv)))
-  static_files: \1
-  upload: (?:^(?!api/)(?!_ah/warmup)(.+\.(m4a|f4a|f4b|oga|ogg|flv|mp4|m4v|f4v|f4p|ogv|webm|mid|midi|mp3|wav|bmp|gif|jpeg|jpg|png|webp|svg|svgz|eot|otf|ttf|ttc|woff|crx|htc|oex|safariextz|swf|torrent|vcf|vtt|xpi|docx?|exe|pptx?|rtf|xlsx?|odp|ods|odt|bz2|gz|rar|tar|tgz|zip|txt|csv)))
 
-- url: (?:^/(?!api/)(?!_ah/warmup)(.+\.(appcache|manifest|webapp|json|xml)))
+- url: (?:^/((js)/.+\.(m4a|f4a|f4b|oga|ogg|flv|mp4|m4v|f4v|f4p|ogv|webm|mid|midi|mp3|wav|bmp|gif|jpeg|jpg|png|webp|svg|svgz|eot|otf|ttf|ttc|woff|crx|htc|oex|safariextz|swf|torrent|vcf|vtt|xpi|docx?|exe|pptx?|rtf|xlsx?|odp|ods|odt|bz2|gz|rar|tar|tgz|zip|txt|csv))$)
   static_files: \1
-  upload: (?:^(?!api/)(?!_ah/warmup)(.+\.(appcache|manifest|webapp|json|xml)))
+  upload: (?:^((js)/.+\.(m4a|f4a|f4b|oga|ogg|flv|mp4|m4v|f4v|f4p|ogv|webm|mid|midi|mp3|wav|bmp|gif|jpeg|jpg|png|webp|svg|svgz|eot|otf|ttf|ttc|woff|crx|htc|oex|safariextz|swf|torrent|vcf|vtt|xpi|docx?|exe|pptx?|rtf|xlsx?|odp|ods|odt|bz2|gz|rar|tar|tgz|zip|txt|csv))$)
+
+- url: (?:^/([^/]+\.(m4a|f4a|f4b|oga|ogg|flv|mp4|m4v|f4v|f4p|ogv|webm|mid|midi|mp3|wav|bmp|gif|jpeg|jpg|png|webp|svg|svgz|eot|otf|ttf|ttc|woff|crx|htc|oex|safariextz|swf|torrent|vcf|vtt|xpi|docx?|exe|pptx?|rtf|xlsx?|odp|ods|odt|bz2|gz|rar|tar|tgz|zip|txt|csv))$)
+  static_files: \1
+  upload: (?:^([^/]+\.(m4a|f4a|f4b|oga|ogg|flv|mp4|m4v|f4v|f4p|ogv|webm|mid|midi|mp3|wav|bmp|gif|jpeg|jpg|png|webp|svg|svgz|eot|otf|ttf|ttc|woff|crx|htc|oex|safariextz|swf|torrent|vcf|vtt|xpi|docx?|exe|pptx?|rtf|xlsx?|odp|ods|odt|bz2|gz|rar|tar|tgz|zip|txt|csv))$)
+
+
+- url: (?:^/((js)/.+\.(appcache|manifest|webapp|json|xml))$)
+  static_files: \1
+  upload: (?:^((js)/.+\.(appcache|manifest|webapp|json|xml))$)
   expiration: "0s"
 
-- url: (?:^/(?!api/)(?!_ah/warmup)(.+\.(html)))
+- url: (?:^/([^/]+\.(appcache|manifest|webapp|json|xml))$)
   static_files: \1
-  upload: (?:^(?!api/)(?!_ah/warmup)(.+\.(html)))
+  upload: (?:^([^/]+\.(appcache|manifest|webapp|json|xml))$)
+  expiration: "0s"
+
+
+- url: (?:^/((js)/.+\.(html))$)
+  static_files: \1
+  upload: (?:^((js)/.+\.(html))$)
   expiration: "15m"
   http_headers:
     X-UA-Compatible: "IE=edge"
   
 
-- url: (?:^/(?!api/)(?!_ah/warmup)(.+\.(css|js|atom|rss)))
+- url: (?:^/([^/]+\.(html))$)
   static_files: \1
-  upload: (?:^(?!api/)(?!_ah/warmup)(.+\.(css|js|atom|rss)))
+  upload: (?:^([^/]+\.(html))$)
+  expiration: "15m"
+  http_headers:
+    X-UA-Compatible: "IE=edge"
+  
+
+
+- url: (?:^/((js)/.+\.(css|js|atom|rss))$)
+  static_files: \1
+  upload: (?:^((js)/.+\.(css|js|atom|rss))$)
   expiration: "15m"
 
-- url: (?:^/(?!api/)(?!_ah/warmup)(.+\.(ico)))
+- url: (?:^/([^/]+\.(css|js|atom|rss))$)
   static_files: \1
-  upload: (?:^(?!api/)(?!_ah/warmup)(.+\.(ico)))
+  upload: (?:^([^/]+\.(css|js|atom|rss))$)
+  expiration: "15m"
+
+
+- url: (?:^/((js)/.+\.(ico))$)
+  static_files: \1
+  upload: (?:^((js)/.+\.(ico))$)
+  expiration: "7d"
+
+- url: (?:^/([^/]+\.(ico))$)
+  static_files: \1
+  upload: (?:^([^/]+\.(ico))$)
   expiration: "7d"
 
 
-# converting /.+/ requests into /.+/index.html
-- url: (?:^/(?!api/)(?!_ah/warmup)(.+)/)
+# converting static (/.+)?/ requests into (/.+)?/index.html.
+# One for subfolders of static folders
+- url: (?:^/((js)(/.+)?)/$)
   static_files: \1/index.html
-  upload: (?:^(?!api/)(?!_ah/warmup)(.+/index\.html))
+  upload: (?:^((js)(/.+)?)/index\.html$)
   expiration: "15m"
   http_headers:
     X-UA-Compatible: "IE=edge"
   
-
-# the rule above did not pick up / to /index.html conversion, so
+# and one for / to /index.html conversion
 - url: /
   static_files: index.html
   upload: index\.html
