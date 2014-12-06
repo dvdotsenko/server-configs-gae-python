@@ -1,11 +1,21 @@
 """
-Generates new app_dynamic_handers.yaml and app_static_handlers.yaml files
+Generates new app.dynamic_handers.yaml and app.static_handlers.yaml files
 based on templates and inputs.
+
+Google's post-app-install script chokes on regexes like `(?=<` and, as a result,
+no meaningful capturing patterns meaning "does not start with but ends with" are possible.
+Instead of saying "these are file extensions that are `static` but not when the url starts with blah"
+we are forced to say "these are all possible starting 'folders' for static content with these extensions"
+and we need to sniff out the "possible 'folders'" at config files build time.
+
+This means that you need to run this every time you add a new static folder to the root folder,
+or you add / alter a static extension
 """
 
 import json
 import os
 import pystache
+import re
 import yaml
 
 from collections import defaultdict
@@ -104,17 +114,46 @@ class StaticHandlersFileGenerator(_BaseClass):
 
         tempate_data_extensions = sorted(tempate_data_extensions, key=lambda d: d.get('expiration'))
 
+        with open('app.yaml') as fp:
+            app_settings = yaml.load(fp)
+
+        skip_files = app_settings['skip_files']
+        skip_files.extend([
+            '^{}$'.format(prefix.lstrip('/').split('/')[0])
+            for prefix in dynamic_prefixes
+        ])
+
+        skip_files_re = [
+            re.compile(rule)
+            for rule in skip_files
+        ]
+
+        def must_be_skipped(name):
+            for rule in skip_files_re:
+                if rule.search(name):
+                    return True
+            return False
+
+        static_prefix = '|'.join([
+            name
+            for name in os.listdir('.')
+            if not must_be_skipped(name) and os.path.isdir(name)
+        ])
+
         template_data = dict(
             extensions = tempate_data_extensions,
-            dynamic_prefixes = [prefix.lstrip('/') for prefix in dynamic_prefixes], # template regex already has leading slash
+            static_prefix = static_prefix,
             # html_expiration
             # html_custom_headers
             warning = "!!!! AUTO-GENERATED FILE !!!!"
         )
 
-        # for index.html handlers we need to fish out expiration and headers we
-        # are to serve with all .html files, if specified
         for handler_data in tempate_data_extensions:
+
+            handler_data['static_prefix'] = static_prefix
+
+            # for index.html handlers we need to fish out expiration and headers we
+            # are to serve with all .html files, if specified
             if 'html' in handler_data['extension']:
 
                 expiration = handler_data.get('expiration')
@@ -124,8 +163,6 @@ class StaticHandlersFileGenerator(_BaseClass):
                 html_http_headers = handler_data.get('http_headers')
                 template_data['has_html_http_headers'] = bool(html_http_headers)
                 template_data['html_http_headers'] = html_http_headers
-
-                break
 
         return template_data
 

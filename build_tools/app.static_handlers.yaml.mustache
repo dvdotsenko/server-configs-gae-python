@@ -10,8 +10,7 @@
 
 # The extensions are inserted into a url regex pattern that will look like this:
 # (?:^/   insures that nothing is captured if some part fails and consumes leading slash
-#   (?!api/)   insures that path does not start with one of dynamic folders
-#   (?!admin/)   --- || --- (we allow multiple top-level dynamic folder to be excluded
+#   (static|another_static)/   list of all folders under root folder that are not dynamic prefixes
 #   (.+\.(html|htm))   the extension(s)
 # )
 
@@ -19,10 +18,22 @@
 
 handlers:
 
-{{#extensions}}
-- url: (?:^/{{#dynamic_prefixes}}(?!{{{.}}}){{/dynamic_prefixes}}(.+\.({{{extension}}})))
+{{! we get 2 handlers defined for each group of extensions because there is no non-insane way of combining the two}}
+{{#extensions}}{{#static_prefix}}
+  {{! static extensions for files within these root folders }}
+- url: (?:^/(({{{static_prefix}}})/.+\.({{{extension}}}))$)
   static_files: \1
-  upload: (?:^{{#dynamic_prefixes}}(?!{{{.}}}){{/dynamic_prefixes}}(.+\.({{{extension}}}))){{#has_expiration}}
+  upload: (?:^(({{{static_prefix}}})/.+\.({{{extension}}}))$){{#has_expiration}}
+  expiration: "{{{expiration}}}"{{/has_expiration}}{{#has_http_headers}}
+  http_headers:{{#http_headers}}
+    {{key}}: "{{{value}}}"
+  {{/http_headers}}{{/has_http_headers}}
+
+{{/static_prefix}}
+  {{! same static extensions for files in root folder }}
+- url: (?:^/([^/]+\.({{{extension}}}))$)
+  static_files: \1
+  upload: (?:^([^/]+\.({{{extension}}}))$){{#has_expiration}}
   expiration: "{{{expiration}}}"{{/has_expiration}}{{#has_http_headers}}
   http_headers:{{#http_headers}}
     {{key}}: "{{{value}}}"
@@ -30,16 +41,18 @@ handlers:
 
 {{/extensions}}
 
-# converting /.+/ requests into /.+/index.html
-- url: (?:^/{{#dynamic_prefixes}}(?!{{{.}}}){{/dynamic_prefixes}}(.+)/)
+# converting static (/.+)?/ requests into (/.+)?/index.html.
+{{#static_prefix}}
+# One for subfolders of static folders
+- url: (?:^/(({{{static_prefix}}})(/.+)?)/$)
   static_files: \1/index.html
-  upload: (?:^{{#dynamic_prefixes}}(?!{{{.}}}){{/dynamic_prefixes}}(.+/index\.html)){{#has_html_expiration}}
+  upload: (?:^(({{{static_prefix}}})(/.+)?)/index\.html$){{#has_html_expiration}}
   expiration: "{{{html_expiration}}}"{{/has_html_expiration}}{{#has_html_http_headers}}
   http_headers:{{#html_http_headers}}
     {{key}}: "{{{value}}}"
   {{/html_http_headers}}{{/has_html_http_headers}}
-
-# the rule above did not pick up / to /index.html conversion, so
+{{/static_prefix}}
+# and one for / to /index.html conversion
 - url: /
   static_files: index.html
   upload: index\.html{{#has_html_expiration}}
